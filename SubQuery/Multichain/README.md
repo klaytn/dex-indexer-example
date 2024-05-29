@@ -44,13 +44,14 @@ You can observe the four services start, and once all are running (it may take a
 
 You can explore the different possible queries and entities to help you with GraphQL using the documentation draw on the right.
 
-Here is an example query to get the first 5 bridge transactions from Finschia chain:
+Here is an example query to get the first 5 bridge transactions ordered by sequence number in descending order:
 
 ```graphql
 {
   query {
-    bridges {
+    bridges (first: 5, orderBy: SEQ_DESC) {
       nodes {
+      id
       sourceTxHash
       destinationTxHash
       seq

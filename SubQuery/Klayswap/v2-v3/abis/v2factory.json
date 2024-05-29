@@ -1,0 +1,83 @@
+[
+    {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "tokenA",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "amountA",
+            "type": "uint"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "tokenB",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "amountB",
+            "type": "uint"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "fee",
+            "type": "uint"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "exchange",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "exid",
+            "type": "uint"
+          }
+        ],
+        "name": "CreatePool",
+        "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "getPoolCount",
+        "outputs": [
+          {
+            "internalType": "uint",
+            "name": "",
+            "type": "uint"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "pools",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	}
+]

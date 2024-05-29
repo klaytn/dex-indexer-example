@@ -96,7 +96,9 @@ export async function handleFbridgeLog(event: CosmosEvent): Promise<void> {
     fromAmount: BigInt(0),
     toAmount: BigInt(0),
     contractAddress: "",
-    timestamp: BigInt(event.block.block.header.time.getTime()),
+    timestamp: BigInt(
+      Math.floor(event.block.block.header.time.getTime() / 1000)
+    ), // convert ms to seconds
     operator: "",
     status: Status.INFLIGHT,
     txFee: BigInt(0),

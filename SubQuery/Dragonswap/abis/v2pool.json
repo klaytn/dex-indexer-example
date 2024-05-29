@@ -1,0 +1,207 @@
+[
+    {
+        "inputs": [],
+        "name": "name",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "tokenA",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "tokenB",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getCurrentPool",
+        "outputs": [
+          {
+            "internalType": "uint",
+            "name": "",
+            "type": "uint"
+          },
+          {
+            "internalType": "uint",
+            "name": "",
+            "type": "uint"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "tokenA",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "amountA",
+            "type": "uint"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "tokenB",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "amountB",
+            "type": "uint"
+          }
+        ],
+        "name": "ExchangePos",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "tokenA",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "amountA",
+            "type": "uint"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "tokenB",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "amountB",
+            "type": "uint"
+          }
+        ],
+        "name": "ExchangeNeg",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "tokenA",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "amountA",
+            "type": "uint"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "tokenB",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "amountB",
+            "type": "uint"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "liquidity",
+            "type": "uint"
+          }
+        ],
+        "name": "AddLiquidity",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "user",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "tokenA",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "amountA",
+            "type": "uint"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "tokenB",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "amountB",
+            "type": "uint"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint",
+            "name": "liquidity",
+            "type": "uint"
+          }
+        ],
+        "name": "RemoveLiquidity",
+        "type": "event"
+      }
+]

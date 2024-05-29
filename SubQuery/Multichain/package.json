@@ -1,0 +1,45 @@
+{
+  "name": "multichain-indexer",
+  "version": "0.0.1",
+  "description": "This package is a SubQuery kaia - finschia multichain for Finschia -> Kaia bridge",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "subql build",
+    "codegen": "subql codegen",
+    "start:docker": "docker-compose pull && docker-compose up --remove-orphans",
+    "dev": "subql codegen && subql build && docker-compose up --remove-orphans",
+    "prepack": "rm -rf dist && npm run build",
+    "test": "subql build && subql-node-ethereum test"
+  },
+  "homepage": "https://github.com/subquery/ethereum-subql-starter",
+  "repository": "github:subquery/ethereum-subql-starter",
+  "files": [
+    "dist",
+    "schema.graphql",
+    "project.yaml"
+  ],
+  "author": "naveed-klaytn",
+  "license": "MIT",
+  "dependencies": {
+    "@subql/common": "latest",
+    "@subql/types-ethereum": "latest",
+    "assert": "^2.0.0",
+    "@subql/types-cosmos": "latest",
+    "@types/node": "^17.0.21",
+    "pino": "^7.8.0",
+    "ts-proto": "^1.112.1",
+    "tslib": "^2.3.1",
+    "@subql/node": "latest"
+  },
+  "devDependencies": {
+    "@subql/cli": "latest",
+    "@subql/node-ethereum": "latest",
+    "@subql/testing": "latest",
+    "@subql/types": "latest",
+    "@typechain/ethers-v5": "^11.1.2",
+    "ethers": "^5.7.2",
+    "typescript": "latest",
+    "@cosmjs/stargate": "^0.28.9",
+    "@subql/node-cosmos": "latest"
+  }
+}

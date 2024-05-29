@@ -34,12 +34,19 @@ dataSources:
             topics:
               - >-
                 ProvisionConfirm((uint64 seq, string sender, address receiver,
-                uint256 amount) indexed provision)
+                uint256 amount) provision)
         - kind: ethereum/LogHandler
           handler: handleClaimLog
           filter:
             topics:
               - >-
                 Claim((uint64 seq, string sender, address receiver, uint256
-                amount) indexed provision)
-repository: https://github.com/klaytn/kaiamonitor
+                amount) provision)
+        - kind: ethereum/LogHandler
+          handler: handleRemoveProvisionLog
+          filter:
+            topics:
+              - >-
+                RemoveProvision((uint64 seq, string sender, address receiver, uint256
+                amount) provision)
+repository: https://github.com/klaytn/dex-indexer-example

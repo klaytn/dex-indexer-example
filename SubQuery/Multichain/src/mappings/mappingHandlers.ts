@@ -3,6 +3,7 @@ import Status from "../utils/status";
 import {
   ClaimLog,
   ProvisionConfirmLog,
+  RemoveProvisionLog,
 } from "../types/abi-interfaces/BridgeAbi";
 
 import assert from "assert";
@@ -72,6 +73,31 @@ export async function handleClaimLog(log: ClaimLog): Promise<void> {
     logger.error(`kaia > Claim: Bridge record not found for seq ${event.seq}`);
   } else {
     bridge.status = Status.DELIVERED;
+    await bridge.save();
+  }
+}
+export async function handleRemoveProvisionLog(
+  log: RemoveProvisionLog
+): Promise<void> {
+  assert(log.args, "No log.args");
+  logger.warn(
+    `Kaia > New RemoveProvision Log at block ${
+      log.blockNumber
+    } with seq ${log.args.provision.seq.toString()}`
+  );
+  const event = log.args.provision;
+
+  // fetch the bridge record
+  const bridge = await Bridge.get(event.seq.toString());
+  if (!bridge) {
+    // logically this could never happen [logging just in case ;) ]
+    logger.error(
+      `Kaia > RemoveProvision: Bridge record not found for seq ${event.seq}`
+    );
+  } else {
+    // set status to failed
+    bridge.status = Status.FAILED;
+    bridge.destinationTxHash = log.transaction.hash;
     await bridge.save();
   }
 }

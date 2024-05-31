@@ -15,9 +15,9 @@ runner:
 schema:
   file: ./schema.graphql
 network:
-  chainId: '1'
+  chainId: 'finschia'
   endpoint:
-    - 'http://192.168.100.9:26657'
+    - 'http://3.38.214.131:26657'
   chaintypes:
     lbm.fbridge.v1:
       file: ./proto/lbm/fbridge/v1/tx.proto

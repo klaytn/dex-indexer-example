@@ -45,6 +45,7 @@ export async function handleProvisionLog(
     // save the bridge record
     await tx.save();
   } else {
+    // update the bridge record
     bridge.status = Status.CONFIRMING;
     bridge.destinationTxHash = log.transaction.hash;
     bridge.txFee = log.transaction.gas * log.transaction.gasPrice;
@@ -54,6 +55,9 @@ export async function handleProvisionLog(
     bridge.contractAddress = log.address;
     // save the bridge record
     await bridge.save();
+    logger.info(
+      `Kaia > ProvisionConfirm: Bridge record updated for seq ${event.seq}`
+    );
   }
 }
 
@@ -74,6 +78,7 @@ export async function handleClaimLog(log: ClaimLog): Promise<void> {
   } else {
     bridge.status = Status.DELIVERED;
     await bridge.save();
+    logger.info(`Kaia > Claim: Bridge record updated for seq ${event.seq}`);
   }
 }
 export async function handleRemoveProvisionLog(
@@ -99,6 +104,9 @@ export async function handleRemoveProvisionLog(
     bridge.status = Status.FAILED;
     bridge.destinationTxHash = log.transaction.hash;
     await bridge.save();
+    logger.info(
+      `Kaia > RemoveProvision: Bridge record updated for seq ${event.seq}`
+    );
   }
 }
 
@@ -108,9 +116,9 @@ export async function handleFbridgeLog(event: CosmosEvent): Promise<void> {
   logger.info(
     `Finschia > New fbridge event at block ${
       event.block.block.header.height
-    } with seq ${
-      event.event.attributes.find((attr) => attr.key === "seq")?.value
-    }`
+    } with seq ${event.event.attributes
+      .find((attr) => attr.key === "seq")
+      ?.value.replace(/"/g, "")}`
   );
   const bridge = Bridge.create({
     id: event.tx.hash,
@@ -150,9 +158,12 @@ export async function handleFbridgeLog(event: CosmosEvent): Promise<void> {
     }
   }
   // check if the bridge record already exists
-  const existingBridge = await Bridge.get(bridge.id); // seq is used as id
+  const existingBridge = await Bridge.get(bridge.seq.toString()); // seq is used as id
   if (!existingBridge) {
     await bridge.save();
+    logger.info(
+      `Finschia > fbridge: Bridge record created for seq ${bridge.seq}`
+    );
   } else {
     // handling rare case where bridge record already exists e.g: ProvisionConfirm event was received before fbridge event
     logger.warn(
@@ -160,5 +171,8 @@ export async function handleFbridgeLog(event: CosmosEvent): Promise<void> {
     );
     existingBridge.sourceTxHash = event.tx.hash;
     await existingBridge.save();
+    logger.info(
+      `Finschia > fbridge: Bridge record updated for seq ${bridge.seq}`
+    );
   }
 }

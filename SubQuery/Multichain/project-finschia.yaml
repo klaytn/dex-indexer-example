@@ -1,0 +1,39 @@
+# // Auto-generated , DO NOT EDIT
+specVersion: 1.0.0
+version: 0.0.1
+name: multichain-messages-finschia
+description: >-
+  This project can be use as a starting point for developing your Cosmos
+  CosmosHub based SubQuery project
+runner:
+  node:
+    name: '@subql/node-cosmos'
+    version: '>=3.0.0'
+  query:
+    name: '@subql/query'
+    version: '*'
+schema:
+  file: ./schema.graphql
+network:
+  chainId: '1'
+  endpoint:
+    - 'http://192.168.100.9:26657'
+  chaintypes:
+    lbm.fbridge.v1:
+      file: ./proto/lbm/fbridge/v1/tx.proto
+      messages:
+        - MsgTransfer
+dataSources:
+  - kind: cosmos/Runtime
+    startBlock: 1
+    mapping:
+      file: ./dist/index.js
+      handlers:
+        - handler: handleFbridgeLog
+          kind: cosmos/EventHandler
+          filter:
+            type: lbm.fbridge.v1.EventTransfer
+        # - handler: handleMessage
+        #   kind: cosmos/MessageHandler
+        #   filter:
+        #     type: /lbm.fbridge.v1.MsgTransfer

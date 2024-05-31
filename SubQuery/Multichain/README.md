@@ -32,7 +32,7 @@ SubQuery supports various layer-1 blockchain networks and provides [dedicated qu
 
 _If you get stuck, find out how to get help below._
 
-The simplest way to run your project is by running `yarn dev` or `npm run-script dev`. This does all of the following:
+The simplest way to run your project is by running `yarn dev > log.txt 2>&1`. This does all of the following:
 
 1.  `yarn codegen` - Generates types from the GraphQL schema definition and contract ABIs and saves them in the `/src/types` directory. This must be done after each change to the `schema.graphql` file or the contract ABIs
 2.  `yarn build` - Builds and packages the SubQuery project into the `/dist` directory

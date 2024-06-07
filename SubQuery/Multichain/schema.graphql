@@ -12,9 +12,11 @@ type Bridge @entity {
   toAmount: BigInt! # Amount of KAIA
   contractAddress: String! # Contract address of the bridge
   timestamp: BigInt! # Timestamp of the transaction
+  deliverTimestamp: BigInt! # Expected Timestamp of the transaction delivered
   operator: String! # Operator address of the bridge 
   status: String! # Status of the transaction [Inflight, Confirming, Delivered, Failed]
   txFee: BigInt! # Transaction fee (in smallest unit of KAIA)
   sourceTxHash: String! # FNSA transaction hash
   destinationTxHash: String! # KAIA transaction hash
+  blockHeight: BigInt! # Block height of the transaction
 }

@@ -38,9 +38,11 @@ export async function handleProvisionLog(
       toAmount: event.amount.toBigInt(),
       contractAddress: log.address,
       timestamp: log.block.timestamp,
+      deliverTimestamp: log.block.timestamp + BigInt(1800), // timestamp + 30 minutes
       operator: log.transaction.from,
       status: Status.CONFIRMING,
       txFee: log.transaction.gas * log.transaction.gasPrice,
+      blockHeight: BigInt(log.block.number),
     });
     // save the bridge record
     await tx.save();
@@ -51,8 +53,10 @@ export async function handleProvisionLog(
     bridge.txFee = log.transaction.gas * log.transaction.gasPrice;
     bridge.operator = log.transaction.from;
     bridge.timestamp = log.block.timestamp;
+    bridge.deliverTimestamp = log.block.timestamp + BigInt(1800); // timestamp + 30 minutes
     bridge.toAmount = event.amount.toBigInt();
     bridge.contractAddress = log.address;
+    bridge.blockHeight = BigInt(log.block.number);
     // save the bridge record
     await bridge.save();
     logger.info(
@@ -103,6 +107,7 @@ export async function handleRemoveProvisionLog(
     // set status to failed
     bridge.status = Status.FAILED;
     bridge.destinationTxHash = log.transaction.hash;
+    bridge.blockHeight = BigInt(log.blockNumber);
     await bridge.save();
     logger.info(
       `Kaia > RemoveProvision: Bridge record updated for seq ${event.seq}`
@@ -133,9 +138,11 @@ export async function handleFbridgeLog(event: CosmosEvent): Promise<void> {
     timestamp: BigInt(
       Math.floor(event.block.block.header.time.getTime() / 1000)
     ), // convert ms to seconds
+    deliverTimestamp: BigInt(0),
     operator: "",
     status: Status.INFLIGHT,
     txFee: BigInt(0),
+    blockHeight: BigInt(event.block.block.header.height),
   });
   for (const attr of event.event.attributes) {
     switch (attr.key) {

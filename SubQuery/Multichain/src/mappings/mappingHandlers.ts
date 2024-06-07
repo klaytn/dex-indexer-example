@@ -53,8 +53,8 @@ export async function handleProvisionLog(
     bridge.txFee = log.transaction.gas * log.transaction.gasPrice;
     bridge.operator = log.transaction.from;
     bridge.timestamp = log.block.timestamp;
-    (bridge.deliverTimestamp = log.block.timestamp + BigInt(1800)), // timestamp + 30 minutes
-      (bridge.toAmount = event.amount.toBigInt());
+    bridge.deliverTimestamp = log.block.timestamp + BigInt(1800); // timestamp + 30 minutes
+    bridge.toAmount = event.amount.toBigInt();
     bridge.contractAddress = log.address;
     bridge.blockHeight = BigInt(log.block.number);
     // save the bridge record

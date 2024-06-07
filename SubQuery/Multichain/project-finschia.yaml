@@ -15,9 +15,9 @@ runner:
 schema:
   file: ./schema.graphql
 network:
-  chainId: 'finschia'
+  chainId: 'finschia' # 'ebony-2' # Finschia chain ID
   endpoint:
-    - 'http://3.38.214.131:26657'
+    - 'http://3.38.214.131:26657' # 'https://ebony-rpc.finschia.io' # Finschia chain RPC endpoint:  
   chaintypes:
     lbm.fbridge.v1:
       file: ./proto/lbm/fbridge/v1/tx.proto

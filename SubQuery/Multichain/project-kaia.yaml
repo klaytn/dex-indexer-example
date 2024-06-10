@@ -18,10 +18,10 @@ network:
     - https://public-en-baobab.klaytn.net
 dataSources:
   - kind: ethereum/Runtime
-    startBlock: 156160146
+    startBlock: 156147114
     options:
       abi: bridge
-      address: '0x482f8229cA58a25C824634758963dD082F36690b'
+      address: '0x4cE2b3dC804B35aC43F96B266B50Bc9fE69A97C2'
     assets:
       bridge:
         file: ./abis/bridge.abi.json

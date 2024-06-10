@@ -15,9 +15,9 @@ runner:
 schema:
   file: ./schema.graphql
 network:
-  chainId: 'finschia' # 'ebony-2' # Finschia chain ID
+  chainId: 'ebony-2' # 'finschia' # Finschia chain ID
   endpoint:
-    - 'http://3.38.214.131:26657' # 'https://ebony-rpc.finschia.io' # Finschia chain RPC endpoint:  
+      - 'https://ebony-rpc.finschia.io' # 'http://3.38.214.131:26657' # Finschia chain RPC endpoint:
   chaintypes:
     lbm.fbridge.v1:
       file: ./proto/lbm/fbridge/v1/tx.proto
@@ -25,7 +25,7 @@ network:
         - MsgTransfer
 dataSources:
   - kind: cosmos/Runtime
-    startBlock: 1
+    startBlock: 47088793 # 47191360
     mapping:
       file: ./dist/index.js
       handlers:

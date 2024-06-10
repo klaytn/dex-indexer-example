@@ -18,10 +18,10 @@ network:
     - https://public-en-baobab.klaytn.net
 dataSources:
   - kind: ethereum/Runtime
-    startBlock: 156147114
+    startBlock: 156160146
     options:
       abi: bridge
-      address: '0x4cE2b3dC804B35aC43F96B266B50Bc9fE69A97C2'
+      address: '0x482f8229cA58a25C824634758963dD082F36690b'
     assets:
       bridge:
         file: ./abis/bridge.abi.json
@@ -49,4 +49,22 @@ dataSources:
               - >-
                 RemoveProvision((uint64 seq, string sender, address receiver, uint256
                 amount) provision)
+        - kind: ethereum/LogHandler
+          handler: handleChangeTimeLockLog
+          filter:
+            topics:
+              - >-
+                ChangeTransferTimeLock(uint256 time)
+        - kind: ethereum/LogHandler
+          handler: handleHoldClaim
+          filter:
+            topics:
+              - >-
+                HoldClaim(uint267 seq, uint256 time)
+        - kind: ethereum/LogHandler
+          handler: handleReleaseClaim
+          filter:
+            topics:
+              - >-
+                ReleaseClaim(uint267 seq, uint256 time)
 repository: https://github.com/klaytn/dex-indexer-example

@@ -1,13 +1,19 @@
-import { Bridge } from "../types";
+import { Bridge, State } from "../types";
 import Status from "../utils/status";
 import {
+  ChangeTransferTimeLockLog,
   ClaimLog,
+  HoldClaimLog,
   ProvisionConfirmLog,
+  ReleaseClaimLog,
   RemoveProvisionLog,
 } from "../types/abi-interfaces/BridgeAbi";
 
 import assert from "assert";
 import { CosmosEvent } from "@subql/types-cosmos";
+
+const BRIDGE_CONTRACT_ADDRESS = "0x482f8229cA58a25C824634758963dD082F36690b";
+const TRANSFER_TIME_LOCK = BigInt(1800); // 30 minutes
 
 export async function handleProvisionLog(
   log: ProvisionConfirmLog
@@ -18,8 +24,8 @@ export async function handleProvisionLog(
       log.blockNumber
     } with seq ${log.args.provision.seq.toString()}`
   );
-
   const event = log.args.provision;
+  const transferLock = await getLatestTransferTimeLock();
   // fetch the bridge record
   const bridge = await Bridge.get(event.seq.toString());
   if (!bridge) {
@@ -38,7 +44,7 @@ export async function handleProvisionLog(
       toAmount: event.amount.toBigInt(),
       contractAddress: log.address,
       timestamp: log.block.timestamp,
-      deliverTimestamp: log.block.timestamp + BigInt(1800), // timestamp + 30 minutes
+      deliverTimestamp: log.block.timestamp + BigInt(transferLock),
       operator: log.transaction.from,
       status: Status.CONFIRMING,
       txFee: log.transaction.gas * log.transaction.gasPrice,
@@ -53,7 +59,7 @@ export async function handleProvisionLog(
     bridge.txFee = log.transaction.gas * log.transaction.gasPrice;
     bridge.operator = log.transaction.from;
     bridge.timestamp = log.block.timestamp;
-    bridge.deliverTimestamp = log.block.timestamp + BigInt(1800); // timestamp + 30 minutes
+    bridge.deliverTimestamp = log.block.timestamp + BigInt(transferLock);
     bridge.toAmount = event.amount.toBigInt();
     bridge.contractAddress = log.address;
     bridge.blockHeight = BigInt(log.block.number);
@@ -181,5 +187,94 @@ export async function handleFbridgeLog(event: CosmosEvent): Promise<void> {
     logger.info(
       `Finschia > fbridge: Bridge record updated for seq ${bridge.seq}`
     );
+  }
+}
+
+// state sync mappings
+
+export async function handleChangeTimeLockLog(
+  log: ChangeTransferTimeLockLog
+): Promise<void> {
+  assert(log.args, "No log.args");
+  logger.info(
+    `Kaia > New ChangeTransferTimeLock Log at block ${log.blockNumber}`
+  );
+  const event = log.args;
+  const bridge = await State.get(BRIDGE_CONTRACT_ADDRESS);
+  if (!bridge) {
+    logger.warn(
+      `Kaia > ChangeTransferTimeLock: State record not found. Creating new record`
+    );
+    const tx = State.create({
+      id: BRIDGE_CONTRACT_ADDRESS,
+      transferLock: event.time.toBigInt(), // seconds e.g: 1800 => 30 minutes
+    });
+    await tx.save();
+    logger.info(
+      `Kaia > ChangeTransferTimeLock: State record created with transferLock time ${event.time.toBigInt()}`
+    );
+  } else {
+    bridge.transferLock = event.time.toBigInt();
+    await bridge.save();
+    logger.info(
+      `Kaia > ChangeTransferTimeLock: State record updated with new transferLock time ${event.time.toBigInt()}`
+    );
+  }
+}
+
+export async function handleHoldClaim(event: HoldClaimLog): Promise<void> {
+  assert(event.args, "No event.args");
+  logger.info(
+    `Kaia > New HoldClaim Log at block ${
+      event.blockNumber
+    } with seq ${event.args.seq.toString()}`
+  );
+  const log = event.args;
+  const bridge = await Bridge.get(log.seq.toString());
+  if (!bridge) {
+    logger.error(
+      `Kaia > HoldClaim: Bridge record not found for seq ${log.seq}`
+    );
+  } else {
+    bridge.deliverTimestamp = log.time.toBigInt(); // uin256 max value - INFINITE
+    await bridge.save();
+    logger.info(
+      `Kaia > HoldClaim: Bridge record updated for seq ${event.args.seq}`
+    );
+  }
+}
+
+export async function handleReleaseClaim(
+  event: ReleaseClaimLog
+): Promise<void> {
+  assert(event.args, "No event.args");
+  logger.info(
+    `Kaia > New ReleaseClaim Log at block ${
+      event.blockNumber
+    } with seq ${event.args.seq.toString()}`
+  );
+  const log = event.args;
+  const bridge = await Bridge.get(log.seq.toString());
+  if (!bridge) {
+    logger.error(
+      `Kaia > ReleaseClaim: Bridge record not found for seq ${log.seq}`
+    );
+  } else {
+    bridge.deliverTimestamp = event.block.timestamp; // set deliverTimestamp to current block timestamp
+    await bridge.save();
+    logger.info(
+      `Kaia > ReleaseClaim: Bridge record updated for seq ${event.args.seq}`
+    );
+  }
+}
+
+// utility function
+async function getLatestTransferTimeLock(): Promise<bigint> {
+  // fetch the state record
+  const state = await State.get(BRIDGE_CONTRACT_ADDRESS);
+  if (state) {
+    return state.transferLock;
+  } else {
+    return TRANSFER_TIME_LOCK;
   }
 }

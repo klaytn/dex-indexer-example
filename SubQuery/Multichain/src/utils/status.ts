@@ -3,6 +3,7 @@ enum Status {
   FAILED = "Failed",
   DELIVERED = "Delivered",
   INFLIGHT = "Inflight",
+  HOLD = "Hold",
 }
 
 export default Status;

@@ -237,6 +237,7 @@ export async function handleHoldClaim(event: HoldClaimLog): Promise<void> {
     );
   } else {
     bridge.deliverTimestamp = log.time.toBigInt(); // uin256 max value - INFINITE
+    bridge.status = Status.HOLD;
     await bridge.save();
     logger.info(
       `Kaia > HoldClaim: Bridge record updated for seq ${event.args.seq}`
@@ -261,6 +262,7 @@ export async function handleReleaseClaim(
     );
   } else {
     bridge.deliverTimestamp = event.block.timestamp; // set deliverTimestamp to current block timestamp
+    bridge.status = Status.CONFIRMING;
     await bridge.save();
     logger.info(
       `Kaia > ReleaseClaim: Bridge record updated for seq ${event.args.seq}`

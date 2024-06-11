@@ -12,7 +12,6 @@ import {
 import assert from "assert";
 import { CosmosEvent } from "@subql/types-cosmos";
 
-const BRIDGE_CONTRACT_ADDRESS = "0x482f8229cA58a25C824634758963dD082F36690b";
 const TRANSFER_TIME_LOCK = BigInt(1800); // 30 minutes
 
 export async function handleProvisionLog(
@@ -25,7 +24,8 @@ export async function handleProvisionLog(
     } with seq ${log.args.provision.seq.toString()}`
   );
   const event = log.args.provision;
-  const transferLock = await getLatestTransferTimeLock();
+  // fetch the transfer lock time
+  const transferLock = await getLatestTransferTimeLock(log.address);
   // fetch the bridge record
   const bridge = await Bridge.get(event.seq.toString());
   if (!bridge) {
@@ -200,13 +200,13 @@ export async function handleChangeTimeLockLog(
     `Kaia > New ChangeTransferTimeLock Log at block ${log.blockNumber}`
   );
   const event = log.args;
-  const bridge = await State.get(BRIDGE_CONTRACT_ADDRESS);
+  const bridge = await State.get(log.address);
   if (!bridge) {
     logger.warn(
       `Kaia > ChangeTransferTimeLock: State record not found. Creating new record`
     );
     const tx = State.create({
-      id: BRIDGE_CONTRACT_ADDRESS,
+      id: log.address,
       transferLock: event.time.toBigInt(), // seconds e.g: 1800 => 30 minutes
     });
     await tx.save();
@@ -269,12 +269,15 @@ export async function handleReleaseClaim(
 }
 
 // utility function
-async function getLatestTransferTimeLock(): Promise<bigint> {
+async function getLatestTransferTimeLock(
+  bridge_contract_address: string
+): Promise<bigint> {
   // fetch the state record
-  const state = await State.get(BRIDGE_CONTRACT_ADDRESS);
+  const state = await State.get(bridge_contract_address);
   if (state) {
     return state.transferLock;
   } else {
+    // return default transfer lock
     return TRANSFER_TIME_LOCK;
   }
 }

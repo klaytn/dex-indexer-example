@@ -20,3 +20,8 @@ type Bridge @entity {
   destinationTxHash: String! # KAIA transaction hash
   blockHeight: BigInt! # Block height of the transaction
 }
+
+type State @entity {
+  id: ID! # Bridge contract address as ID of the state transaction
+  transferLock: BigInt! # Time lock of KAIA transfer (in seconds)
+}

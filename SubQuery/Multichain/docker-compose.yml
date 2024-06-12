@@ -36,6 +36,7 @@ services:
       - --multi-chain
       - --db-schema=multi-messages
       - --disable-historical
+      - --block-confirmations=1
     healthcheck:
       test:
         - CMD

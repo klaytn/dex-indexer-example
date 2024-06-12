@@ -15,7 +15,7 @@ runner:
 schema:
   file: ./schema.graphql
 network:
-  chainId: 'finschia' # 'ebony-2' #  'finschia' # Finschia chain ID
+  chainId: 'ebony-2' # 'ebony-2' #  'finschia' # Finschia chain ID
   endpoint:
       - 'https://ebony-rpc.finschia.io' # 'https://ebony-rpc.finschia.io' # Finschia chain RPC endpoint:  
   chaintypes:

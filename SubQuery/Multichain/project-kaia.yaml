@@ -60,11 +60,11 @@ dataSources:
           filter:
             topics:
               - >-
-                HoldClaim(uint267 seq, uint256 time)
+                HoldClaim(uint256 seq, uint256 time)
         - kind: ethereum/LogHandler
           handler: handleReleaseClaim
           filter:
             topics:
               - >-
-                ReleaseClaim(uint267 seq, uint256 time)
+                ReleaseClaim(uint256 seq, uint256 time)
 repository: https://github.com/klaytn/dex-indexer-example

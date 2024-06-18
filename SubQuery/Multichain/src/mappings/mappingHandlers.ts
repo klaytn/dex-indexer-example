@@ -1,4 +1,9 @@
-import { Bridge, State } from "../types";
+import {
+  Kaia as KaiaTx,
+  State,
+  Finschia as FinschiaTx,
+  Bridge as Transaction,
+} from "../types";
 import Status from "../utils/status";
 import {
   ChangeTransferTimeLockLog,
@@ -24,51 +29,29 @@ export async function handleProvisionLog(
     } with seq ${log.args.provision.seq.toString()}`
   );
   const event = log.args.provision;
+  // store the seq
+  await storeSeqIfNotExists(event.seq.toString());
   // fetch the transfer lock time
   const transferLock = await getLatestTransferTimeLock(log.address);
-  // fetch the bridge record
-  const bridge = await Bridge.get(event.seq.toString());
-  if (!bridge) {
-    // handling rare case where ProvisionConfirm event was received before fbridge event
-    logger.warn(
-      `Kaia > ProvisionConfirm: Bridge record not found for seq ${event.seq}`
-    );
-    const tx = Bridge.create({
-      id: event.seq.toString(),
-      sourceTxHash: "",
-      destinationTxHash: log.transaction.hash,
-      seq: event.seq.toBigInt(),
-      sender: event.sender,
-      receiver: event.receiver,
-      fromAmount: event.amount.toBigInt(),
-      toAmount: event.amount.toBigInt(),
-      contractAddress: log.address,
-      timestamp: log.block.timestamp,
-      deliverTimestamp: log.block.timestamp + BigInt(transferLock),
-      operator: log.transaction.from,
-      status: Status.CONFIRMING,
-      txFee: log.transaction.gas * log.transaction.gasPrice,
-      blockHeight: BigInt(log.block.number),
-    });
-    // save the bridge record
-    await tx.save();
-  } else {
-    // update the bridge record
-    bridge.status = Status.CONFIRMING;
-    bridge.destinationTxHash = log.transaction.hash;
-    bridge.txFee = log.transaction.gas * log.transaction.gasPrice;
-    bridge.operator = log.transaction.from;
-    bridge.timestamp = log.block.timestamp;
-    bridge.deliverTimestamp = log.block.timestamp + BigInt(transferLock);
-    bridge.toAmount = event.amount.toBigInt();
-    bridge.contractAddress = log.address;
-    bridge.blockHeight = BigInt(log.block.number);
-    // save the bridge record
-    await bridge.save();
-    logger.info(
-      `Kaia > ProvisionConfirm: Bridge record updated for seq ${event.seq}`
-    );
-  }
+
+  const tx = KaiaTx.create({
+    id: event.seq.toString(),
+    destinationTxHash: log.transaction.hash,
+    seq: event.seq.toBigInt(),
+    sender: event.sender,
+    receiver: event.receiver,
+    amount: event.amount.toBigInt(),
+    contractAddress: log.address,
+    timestamp: log.block.timestamp,
+    deliverTimestamp: log.block.timestamp + BigInt(transferLock),
+    operator: log.transaction.from,
+    status: Status.CONFIRMING,
+    txFee: log.transaction.gas * log.transaction.gasPrice,
+    blockHeight: BigInt(log.block.number),
+    bridgeId: event.seq.toString(),
+  });
+  // save the tx record
+  await tx.save();
 }
 
 export async function handleClaimLog(log: ClaimLog): Promise<void> {
@@ -80,14 +63,14 @@ export async function handleClaimLog(log: ClaimLog): Promise<void> {
   );
   const event = log.args.provision;
 
-  // fetch the bridge record
-  const bridge = await Bridge.get(event.seq.toString());
-  if (!bridge) {
+  // fetch the KaiaTx record
+  const tx = await KaiaTx.get(event.seq.toString());
+  if (!tx) {
     // logically this could never happen [logging just in case ;) ]
     logger.error(`kaia > Claim: Bridge record not found for seq ${event.seq}`);
   } else {
-    bridge.status = Status.DELIVERED;
-    await bridge.save();
+    tx.status = Status.DELIVERED;
+    await tx.save();
     logger.info(`Kaia > Claim: Bridge record updated for seq ${event.seq}`);
   }
 }
@@ -102,19 +85,19 @@ export async function handleRemoveProvisionLog(
   );
   const event = log.args.provision;
 
-  // fetch the bridge record
-  const bridge = await Bridge.get(event.seq.toString());
-  if (!bridge) {
+  // fetch the KaiaTx record
+  const tx = await KaiaTx.get(event.seq.toString());
+  if (!tx) {
     // logically this could never happen [logging just in case ;) ]
     logger.error(
       `Kaia > RemoveProvision: Bridge record not found for seq ${event.seq}`
     );
   } else {
     // set status to failed
-    bridge.status = Status.FAILED;
-    bridge.destinationTxHash = log.transaction.hash;
-    bridge.blockHeight = BigInt(log.blockNumber);
-    await bridge.save();
+    tx.status = Status.FAILED;
+    tx.destinationTxHash = log.transaction.hash;
+    tx.blockHeight = BigInt(log.blockNumber);
+    await tx.save();
     logger.info(
       `Kaia > RemoveProvision: Bridge record updated for seq ${event.seq}`
     );
@@ -124,72 +107,49 @@ export async function handleRemoveProvisionLog(
 // finschia mappings
 
 export async function handleFbridgeLog(event: CosmosEvent): Promise<void> {
+  const seq = event.event.attributes
+    .find((attr) => attr.key === "seq")
+    ?.value.replace(/"/g, "");
+  assert(seq, "Finschia > No seq attribute found in event");
+
   logger.info(
-    `Finschia > New fbridge event at block ${
-      event.block.block.header.height
-    } with seq ${event.event.attributes
-      .find((attr) => attr.key === "seq")
-      ?.value.replace(/"/g, "")}`
+    `Finschia > New fbridge event at block ${event.block.block.header.height} with seq ${seq}`
   );
-  const bridge = Bridge.create({
-    id: event.tx.hash,
-    sourceTxHash: event.tx.hash,
-    destinationTxHash: "",
-    seq: BigInt(0),
+  // store the seq
+  await storeSeqIfNotExists(seq);
+  // create a new finschiaTx record
+  const tx = FinschiaTx.create({
+    id: seq,
+    seq: BigInt(seq),
     sender: "",
     receiver: "",
-    fromAmount: BigInt(0),
-    toAmount: BigInt(0),
-    contractAddress: "",
+    amount: BigInt(0),
     timestamp: BigInt(
       Math.floor(event.block.block.header.time.getTime() / 1000)
     ), // convert ms to seconds
-    deliverTimestamp: BigInt(0),
-    operator: "",
-    status: Status.INFLIGHT,
-    txFee: BigInt(0),
     blockHeight: BigInt(event.block.block.header.height),
+    sourceTxHash: event.tx.hash,
+    status: Status.INFLIGHT,
+    bridgeId: seq,
   });
   for (const attr of event.event.attributes) {
     switch (attr.key) {
       case "receiver":
-        bridge.receiver = attr.value.replace(/"/g, ""); // remove quotes
+        tx.receiver = attr.value.replace(/"/g, ""); // remove quotes
         break;
       case "amount":
-        bridge.fromAmount = BigInt(attr.value.replace(/"/g, ""));
+        tx.amount = BigInt(attr.value.replace(/"/g, ""));
         break;
       case "sender":
-        bridge.sender = attr.value.replace(/"/g, ""); // remove quotes
-        break;
-      case "seq":
-        const seqStr = attr.value.replace(/"/g, ""); // remove quotes - "100" => 100
-        bridge.seq = BigInt(seqStr);
-        bridge.id = seqStr; // set id to seq to avoid duplicate records
+        tx.sender = attr.value.replace(/"/g, ""); // remove quotes
         break;
       default:
         break;
     }
   }
-  // check if the bridge record already exists
-  const existingBridge = await Bridge.get(bridge.seq.toString()); // seq is used as id
-  if (!existingBridge) {
-    await bridge.save();
-    logger.info(
-      `Finschia > fbridge: Bridge record created for seq ${bridge.seq}`
-    );
-  } else {
-    // handling rare case where bridge record already exists e.g: ProvisionConfirm event was received before fbridge event
-    logger.warn(
-      `Finschia > fbridge: Bridge record already exists for seq ${bridge.seq}`
-    );
-    existingBridge.sourceTxHash = event.tx.hash;
-    await existingBridge.save();
-    logger.info(
-      `Finschia > fbridge: Bridge record updated for seq ${bridge.seq}`
-    );
-  }
+  await tx.save();
+  logger.info(`Finschia > fbridge: Bridge record created for seq ${tx.seq}`);
 }
-
 // state sync mappings
 
 export async function handleChangeTimeLockLog(
@@ -222,50 +182,42 @@ export async function handleChangeTimeLockLog(
   }
 }
 
-export async function handleHoldClaim(event: HoldClaimLog): Promise<void> {
-  assert(event.args, "No event.args");
+export async function handleHoldClaim(log: HoldClaimLog): Promise<void> {
+  assert(log.args, "No event.args");
   logger.info(
-    `Kaia > New HoldClaim Log at block ${
-      event.blockNumber
-    } with seq ${event.args.seq.toString()}`
+    `Kaia > New HoldClaim Log at block ${log.blockNumber} with seq ${log.args.seq}`
   );
-  const log = event.args;
-  const bridge = await Bridge.get(log.seq.toString());
-  if (!bridge) {
+  const event = log.args;
+  const tx = await KaiaTx.get(event.seq.toString());
+  if (!tx) {
     logger.error(
-      `Kaia > HoldClaim: Bridge record not found for seq ${log.seq}`
+      `Kaia > HoldClaim: Bridge record not found for seq ${event.seq}`
     );
   } else {
-    bridge.deliverTimestamp = log.time.toBigInt(); // uin256 max value - INFINITE
-    bridge.status = Status.HOLD;
-    await bridge.save();
-    logger.info(
-      `Kaia > HoldClaim: Bridge record updated for seq ${event.args.seq}`
-    );
+    tx.deliverTimestamp = event.time.toBigInt(); // uin256 max value - INFINITE
+    tx.status = Status.HOLD;
+    await tx.save();
+    logger.info(`Kaia > HoldClaim: Bridge record updated for seq ${event.seq}`);
   }
 }
 
-export async function handleReleaseClaim(
-  event: ReleaseClaimLog
-): Promise<void> {
-  assert(event.args, "No event.args");
+export async function handleReleaseClaim(log: ReleaseClaimLog): Promise<void> {
+  assert(log.args, "No event.args");
   logger.info(
-    `Kaia > New ReleaseClaim Log at block ${
-      event.blockNumber
-    } with seq ${event.args.seq.toString()}`
+    `Kaia > New ReleaseClaim Log at block ${log.blockNumber} with seq ${log.args.seq}`
   );
-  const log = event.args;
-  const bridge = await Bridge.get(log.seq.toString());
-  if (!bridge) {
+  const event = log.args;
+  const tx = await KaiaTx.get(event.seq.toString());
+  if (!tx) {
     logger.error(
-      `Kaia > ReleaseClaim: Bridge record not found for seq ${log.seq}`
+      `Kaia > ReleaseClaim: Bridge record not found for seq ${event.seq}`
     );
   } else {
-    bridge.deliverTimestamp = event.block.timestamp; // set deliverTimestamp to current block timestamp
-    bridge.status = Status.CONFIRMING;
-    await bridge.save();
+    tx.deliverTimestamp = log.block.timestamp; // set deliverTimestamp to current block timestamp
+    tx.status = Status.CONFIRMING;
+    await tx.save();
     logger.info(
-      `Kaia > ReleaseClaim: Bridge record updated for seq ${event.args.seq}`
+      `Kaia > ReleaseClaim: Bridge record updated for seq ${event.seq}`
     );
   }
 }
@@ -281,5 +233,18 @@ async function getLatestTransferTimeLock(
   } else {
     // return default transfer lock
     return TRANSFER_TIME_LOCK;
+  }
+}
+
+async function storeSeqIfNotExists(seq: string): Promise<void> {
+  const existingSeq = await Transaction.get(seq);
+  if (!existingSeq) {
+    const newTransaction = Transaction.create({
+      id: seq,
+      seq: BigInt(seq),
+    });
+
+    await newTransaction.save();
+    logger.info(`Indexer > New Transaction record created for seq ${seq}`);
   }
 }

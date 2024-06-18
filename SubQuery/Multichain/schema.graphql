@@ -5,20 +5,39 @@
 
 type Bridge @entity {
   id: ID! # Sequence number as ID of the bridge transaction
+  seq: BigInt!
+  finschia: Finschia @derivedFrom(field: "bridge")
+  kaia: Kaia @derivedFrom(field: "bridge")
+}
+
+type Finschia @entity {
+  id: ID! # Finschia transaction hash
   seq: BigInt! # Sequence number
   sender: String! # FNSA address
+  receiver: String! # FNSA address
+  amount: BigInt! # Amount of FNSA
+  timestamp: BigInt! # Timestamp of the transaction
+  blockHeight: BigInt! # Block height of the transaction
+  sourceTxHash: String! # Finschia transaction hash
+  status: String! # Status of the transaction [Inflight, Confirming, Delivered, Failed]
+  bridge: Bridge!
+}
+
+type Kaia @entity {
+  id: ID! # KAIA transaction hash
+  seq: BigInt! # Sequence number
+  sender: String! # KAIA address
   receiver: String! # KAIA address
-  fromAmount: BigInt! # Amount of FNSA
-  toAmount: BigInt! # Amount of KAIA
+  amount: BigInt! # Amount of KAIA
   contractAddress: String! # Contract address of the bridge
   timestamp: BigInt! # Timestamp of the transaction
   deliverTimestamp: BigInt! # Expected Timestamp of the transaction delivered
   operator: String! # Operator address of the bridge 
   status: String! # Status of the transaction [Inflight, Confirming, Delivered, Failed]
   txFee: BigInt! # Transaction fee (in smallest unit of KAIA)
-  sourceTxHash: String! # FNSA transaction hash
   destinationTxHash: String! # KAIA transaction hash
   blockHeight: BigInt! # Block height of the transaction
+  bridge: Bridge!
 }
 
 type State @entity {

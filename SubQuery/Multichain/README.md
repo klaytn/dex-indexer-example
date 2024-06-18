@@ -51,19 +51,27 @@ Here is an example query to get the first 5 bridge transactions ordered by seque
   query {
     bridges (first: 5, orderBy: SEQ_DESC) {
       nodes {
-      id
-      sourceTxHash
-      destinationTxHash
       seq
-      sender
-      receiver
-      fromAmount
-      toAmount
-      timestamp
-      status
-      contractAddress
-      operator
-      txFee
+        finschia{
+          sourceTxHash
+          sender
+          receiver
+          amount
+          status
+          timestamp
+        }
+        kaia{
+          sender
+          receiver
+          amount
+          contractAddress
+          timestamp
+          deliverTimestamp
+          operator
+          status
+          txFee
+          destinationTxHash
+        }
     }
     }
   }
